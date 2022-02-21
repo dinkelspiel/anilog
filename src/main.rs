@@ -2,13 +2,11 @@ use std::env;
 use std::fs::File;
 use std::path::Path;
 use std::io::prelude::*;
-use std::process::Command;
 use json::JsonValue;
 use json::object;
 use edit;
 
 use std::{
-    env::{temp_dir, var},
     io::Read,
 };
 
@@ -31,13 +29,6 @@ enum MANGASTATUS {
     COMPLETED,
     HOLD,
     DROPPED
-}
-
-fn rem_first_and_last(value: &str) -> &str {
-    let mut chars = value.chars();
-    chars.next();
-    chars.next_back();
-    chars.as_str()
 }
 
 fn print_help() {
