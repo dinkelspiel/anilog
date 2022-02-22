@@ -5,11 +5,14 @@ use std::io::prelude::*;
 use json::JsonValue;
 use json::object;
 use edit;
+use std::string::ToString;
+use strum_macros::Display;
 
 use std::{
     io::Read,
 };
 
+#[derive(Display, Debug)]
 enum SERIESSTATUS {
     PLANNED,
     WATCHING,
@@ -18,17 +21,55 @@ enum SERIESSTATUS {
     DROPPED
 }
 
+impl SERIESSTATUS {
+    fn from_i8(value: i8) -> SERIESSTATUS {
+        match value {
+            0 => SERIESSTATUS::PLANNED,
+            1 => SERIESSTATUS::WATCHING,
+            2 => SERIESSTATUS::COMPLETED,
+            3 => SERIESSTATUS::HOLD,
+            4 => SERIESSTATUS::DROPPED,
+            _ => panic!("Unknown value: {}", value),
+        }
+    }
+}
+
+#[derive(Display, Debug)]
 enum MOVIESTATUS {
     PLANNED,
     COMPLETED
 }
 
+impl MOVIESTATUS {
+    fn from_i8(value: i8) -> MOVIESTATUS {
+        match value {
+            0 => MOVIESTATUS::PLANNED,
+            1 => MOVIESTATUS::COMPLETED,
+            _ => panic!("Unknown value: {}", value),
+        }
+    }
+}
+
+#[derive(Display, Debug)]
 enum MANGASTATUS {
     PLANNED,
     READING,
     COMPLETED,
     HOLD,
     DROPPED
+}
+
+impl MANGASTATUS {
+    fn from_i8(value: i8) -> MANGASTATUS {
+        match value {
+            0 => MANGASTATUS::PLANNED,
+            1 => MANGASTATUS::READING,
+            2 => MANGASTATUS::COMPLETED,
+            3 => MANGASTATUS::HOLD,
+            4 => MANGASTATUS::DROPPED,
+            _ => panic!("Unknown value: {}", value),
+        }
+    }
 }
 
 fn print_help() {
@@ -65,7 +106,8 @@ fn print_help() {
     println!(" --total, -t                                         Total items in a category.");
     println!("");
     println!("OPTIONS:");
-    println!(" --get <CATEGORY/--all> <STATISTIC>                  Get a statistic under `STATISTIC` for a specific category or everything.");
+    println!(" --get <CATEGORY> <NAME>                             Get the information for a specific anime or manga in the catalogue.");
+    println!(" --getstat <CATEGORY/--all> <STATISTIC>              Get a statistic under `STATISTIC` for a specific category or everything.");
     println!("x--getsort <CATEGORY/--all> <SORT> <?LENGTH/--all>   Get a specific category or everything sorted by any of the methods under `SORT`.");
     println!(" --add <CATEGORY> <NAME> <?RATING> <?STATUS>         Add anime or manga to database with optional rating and status.");
     println!(" --edit <CATEGORY> <NAME>                            Edit the notes for a specific anime or manga.");
@@ -192,6 +234,44 @@ fn main() -> std::io::Result<()> {
             return Ok(());
         }
     } else if args[1] == "--get" {
+        if args.len() != 4 {
+            print_help();
+            println!("Invalid number of arguments!");
+            return Ok(());
+        }
+
+        if args[2] == "--series" || args[2] == "-s" {
+            println!("Name:");
+            println!(" {}", data["series"][&args[3]]["name"]);
+            println!("Rating:");
+            println!(" {}", data["series"][&args[3]]["rating"]);
+            println!("Status:");
+            let status_int = String::from(&json::stringify(data["series"][&args[3]]["status"].clone())).parse::<i8>().unwrap();
+            println!(" {}", SERIESSTATUS::from_i8(status_int).to_string());
+            println!("Notes:");
+            println!(" {}", data["series"][&args[3]]["notes"]);
+        } else if args[2] == "-mo" || args[2] == "--movie" || args[2] == "--movies" {
+            println!("Name:");
+            println!(" {}", data["movies"][&args[3]]["name"]);
+            println!("Rating:");
+            println!(" {}", data["movies"][&args[3]]["rating"]);
+            println!("Status:");
+            let status_int = String::from(&json::stringify(data["movies"][&args[3]]["status"].clone())).parse::<i8>().unwrap();
+            println!(" {}", MOVIESTATUS::from_i8(status_int).to_string());
+            println!("Notes:");
+            println!(" {}", data["movies"][&args[3]]["notes"]);
+        } else if args[2] == "-ma" || args[2] == "--manga" {
+            println!("Name:");
+            println!(" {}", data["manga"][&args[3]]["name"]);
+            println!("Rating:");
+            println!(" {}", data["manga"][&args[3]]["rating"]);
+            println!("Status:");
+            let status_int = String::from(&json::stringify(data["manga"][&args[3]]["status"].clone())).parse::<i8>().unwrap();
+            println!(" {}", MANGASTATUS::from_i8(status_int).to_string());
+            println!("Notes:");
+            println!(" {}", data["manga"][&args[3]]["notes"]);
+        }
+    } else if args[1] == "--getstat" {
         if args.len() != 4 {
             print_help();
             println!("Invalid number of arguments!");
