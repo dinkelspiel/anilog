@@ -7,6 +7,7 @@ use json::object;
 use edit;
 use std::string::ToString;
 use strum_macros::Display;
+use dirs;
 
 use std::{
     io::Read,
@@ -121,8 +122,20 @@ fn main() -> std::io::Result<()> {
 
     let mut data: JsonValue;
 
-    if Path::new("./data.json").exists() {
-        let mut file = File::open("data.json")?;
+    let mut path: String;
+
+    if cfg!(windows) {
+        path = dirs::home_dir().unwrap().into_os_string().into_string().unwrap();
+        path.push_str("\\anilog.json");
+    } else if cfg!(unix) {
+        path = dirs::home_dir().unwrap().into_os_string().into_string().unwrap();
+        path.push_str("/anilog.json");
+    } else {
+        path = String::from("anilog.json");
+    }
+
+    if Path::new(&path).exists() {
+        let mut file = File::open(&path)?;
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
         
@@ -404,7 +417,19 @@ fn main() -> std::io::Result<()> {
 
     // println!("{:#}", data);
 
-    let mut file = File::create("data.json")?;
+    let mut path: String;
+
+    if cfg!(windows) {
+        path = dirs::home_dir().unwrap().into_os_string().into_string().unwrap();
+        path.push_str("\\anilog.json");
+    } else if cfg!(unix) {
+        path = dirs::home_dir().unwrap().into_os_string().into_string().unwrap();
+        path.push_str("/anilog.json");
+    } else {
+        path = String::from("anilog.json");
+    }
+
+    let mut file = File::create(&path)?;
     file.write_all(json::stringify(data).as_bytes())?;
     Ok(())
 }
