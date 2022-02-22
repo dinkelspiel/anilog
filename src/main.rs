@@ -32,10 +32,45 @@ enum MANGASTATUS {
 }
 
 fn print_help() {
+    println!("SERIES STATUS:");
+    println!(" --planned, -p                                       Planning to watch");
+    println!(" --watching, -w                                      Currently watching");
+    println!(" --completed, -c                                     Completed");
+    println!(" --hold, -h                                          On Hold");
+    println!(" --dropped, -d                                       Dropped");
+    println!("");
+    println!("MOVIE STATUS:");
+    println!(" --planned, -p                                       Planning to watch");
+    println!(" --completed, -c                                     Completed");
+    println!("");
+    println!("MANGA STATUS:");
+    println!(" --planned, -p                                       Planning to watch");
+    println!(" --reading, -r                                       Reading");
+    println!(" --completed, -c                                     Completed");
+    println!(" --hold, -h                                          On Hold");
+    println!(" --dropped, -d                                       Dropped");
+    println!("");
+    println!("CATEGORIES:");
+    println!(" --series, -s                                        Series");
+    println!(" --movies, --movie, -mo                              Movies");
+    println!(" --manga, -ma                                        Manga");
+    println!("");
+    println!("SORT:");
+    println!(" --alphabetical, -a                                  Sort by alphabetical order.");
+    println!(" --rating, -r                                        Sort by rating.");
+    println!(" --ratingdesc, -rd                                   Sort by rating descending.");
+    println!("");
+    println!("STATISTIC:");
+    println!(" --completed, -c                                     Number of completed items.");
+    println!(" --total, -t                                         Total items in a category.");
+    println!("");
     println!("OPTIONS:");
+    println!(" --get <CATEGORY/--all> <STATISTIC>                  Get a statistic under `STATISTIC` for a specific category or everything.");
+    println!("x--getsort <CATEGORY/--all> <SORT> <?LENGTH/--all>   Get a specific category or everything sorted by any of the methods under `SORT`.");
     println!(" --add <CATEGORY> <NAME> <?RATING> <?STATUS>         Add anime or manga to database with optional rating and status.");
     println!(" --edit <CATEGORY> <NAME>                            Edit the notes for a specific anime or manga.");
     println!(" --editjson <CATEGORY> <NAME>                        Edit the json for a specific anime or manga.");
+    println!();
 }
 
 fn main() -> std::io::Result<()> {
@@ -92,6 +127,12 @@ fn main() -> std::io::Result<()> {
                 notes: ""
             };
         } else if args.len() == 5 {
+
+            if String::from(&args[4]).parse::<i8>().unwrap() > 101 || String::from(&args[4]).parse::<i8>().unwrap() < 0 {
+                println!("Ratings must be between 0 and 100!");
+                return Ok(());
+            }
+        
             data[category][&args[3]] = object!{
                 name: String::from(&args[3]),
                 rating: String::from(&args[4]).parse::<i8>().unwrap(),
@@ -135,6 +176,11 @@ fn main() -> std::io::Result<()> {
                 }
             }
 
+            if String::from(&args[4]).parse::<i8>().unwrap() > 101 || String::from(&args[4]).parse::<i8>().unwrap() < 0 {
+                println!("Ratings must be between 0 and 100!");
+                return Ok(());
+            }
+
             data[category][&args[3]] = object!{
                 name: String::from(&args[3]),
                 rating: String::from(&args[4]).parse::<i8>().unwrap(),
@@ -145,6 +191,80 @@ fn main() -> std::io::Result<()> {
             print_help();
             return Ok(());
         }
+    } else if args[1] == "--get" {
+        if args.len() != 4 {
+            print_help();
+            println!("Invalid number of arguments!");
+            return Ok(());
+        }
+
+        if args[2] == "--series" || args[2] == "-s" {
+            if args[3] == "--completed" || args[3] == "-c" {
+                println!("Indexing Series...");
+                let mut completed: i16 = 0;
+                for i in data["series"].entries() {
+                    if i.1["status"] == SERIESSTATUS::COMPLETED as i8 {
+                        completed += 1;
+                    }
+                }
+                println!("You have completed {} series.", completed);
+            } else if args[3] == "--total" || args[3] == "-t" {
+                println!("You have {} series in the catalogue.", data["series"].entries().len());
+            }
+        } else if args[2] == "-mo" || args[2] == "--movie" || args[2] == "--movies" {
+            if args[3] == "--completed" || args[3] == "-c" {
+                println!("Indexing Movies...");
+                let mut completed: i16 = 0;
+                for i in data["movies"].entries() {
+                    if i.1["status"] == MOVIESTATUS::COMPLETED as i8 {
+                        completed += 1;
+                    }
+                }
+                println!("You have completed {} movies.", completed);
+            } else if args[3] == "--total" || args[3] == "-t" {
+                println!("You have {} movies in the catalogue.", data["movies"].entries().len());
+            }
+        } else if args[2] == "-ma" || args[2] == "--manga" {
+            if args[3] == "--completed" || args[3] == "-c" {
+                println!("Indexing Mangas...");
+                let mut completed: i16 = 0;
+                for i in data["manga"].entries() {
+                    if i.1["status"] == MANGASTATUS::COMPLETED as i8 {
+                        completed += 1;
+                    }
+                }
+                println!("You have completed {} mangas.", completed);
+            } else if args[3] == "--total" || args[3] == "-t" {
+                println!("You have {} mangas in the catalogue.", data["manga"].entries().len());
+            }
+        } else if args[2] == "--all" {
+            if args[3] == "--completed" || args[3] == "-c" {
+                println!("Indexing Series...");
+                let mut completed: i16 = 0;
+                for i in data["series"].entries() {
+                    if i.1["status"] == SERIESSTATUS::COMPLETED as i8 {
+                        completed += 1;
+                    }
+                }
+                println!("Indexing Movies...");
+                for i in data["movies"].entries() {
+                    if i.1["status"] == MOVIESTATUS::COMPLETED as i8 {
+                        completed += 1;
+                    }
+                }
+                println!("Indexing Mangas...");
+                for i in data["manga"].entries() {
+                    if i.1["status"] == MANGASTATUS::COMPLETED as i8 {
+                        completed += 1;
+                    }
+                }
+                println!("You have completed {} animes and mangas.", completed);
+            } else if args[3] == "--total" || args[3] == "-t" {
+                println!("You have {} animes and mangas in the catalogue.", data["series"].entries().len() + data["movies"].entries().len() + data["manga"].entries().len());
+            }
+        }
+    } else if args[1] == "--getsort" {
+        println!("This is not implemented yet.");
     } else if args[1] == "--edit" {
         if args.len() == 4 {
             let category: String;
@@ -170,6 +290,7 @@ fn main() -> std::io::Result<()> {
             data[&category][&args[3]]["notes"] = json::parse(&edited).unwrap();
         } else {
             print_help();
+            println!("Invalid number of arguments!");
             return Ok(());
         }
     } else if args[1] == "--editjson" {
